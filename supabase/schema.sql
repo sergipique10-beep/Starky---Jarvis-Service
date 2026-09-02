@@ -1,6 +1,6 @@
 create table if not exists projects (
   id uuid primary key default gen_random_uuid(),
-  name text not null,
+  name text not null unique,
   status text not null default 'active',
   description text,
   key_decisions text,
