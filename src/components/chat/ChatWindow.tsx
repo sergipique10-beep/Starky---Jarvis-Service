@@ -1,9 +1,10 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import MessageList, { type DisplayMessage } from './MessageList';
 import MessageInput from './MessageInput';
 import ConfirmationBanner from './ConfirmationBanner';
+import Orb, { type OrbState } from '../orb/Orb';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 
 interface PendingConfirmation {
@@ -14,12 +15,24 @@ interface PendingConfirmation {
 export default function ChatWindow({ conversationId }: { conversationId: string }) {
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [pending, setPending] = useState<PendingConfirmation | null>(null);
+  const [orbState, setOrbState] = useState<OrbState>('idle');
+  const [isListening, setIsListening] = useState(false);
   const { speak } = useSpeechSynthesis();
   const requestIdRef = useRef(0);
+
+  // Update orbState based on listening state, unless overridden by thinking/speaking
+  useEffect(() => {
+    if (isListening) {
+      setOrbState('listening');
+    } else if (orbState !== 'thinking' && orbState !== 'speaking') {
+      setOrbState('idle');
+    }
+  }, [isListening]);
 
   async function send(text: string) {
     setMessages((prev) => [...prev, { role: 'user', text }]);
     const myRequestId = ++requestIdRef.current;
+    setOrbState('thinking');
     const res = await fetch('/api/chat', {
       method: 'POST',
       body: JSON.stringify({ conversationId, text }),
@@ -45,16 +58,22 @@ export default function ChatWindow({ conversationId }: { conversationId: string 
   function applyResponse(data: any) {
     if (data.type === 'confirmation_required') {
       setPending({ pendingId: data.pendingId, summary: data.summary });
+      setOrbState('idle');
     } else {
       setMessages((prev) => [...prev, { role: 'assistant', text: data.text }]);
       // Voice-safety rule: only ever speak a plain assistant message, never the
       // confirmation summary (that always stays on-screen text via ConfirmationBanner).
-      speak(data.text);
+      speak(
+        data.text,
+        () => setOrbState('speaking'),
+        () => setOrbState('idle')
+      );
     }
   }
 
   return (
     <div>
+      <Orb state={orbState} />
       <MessageList messages={messages} />
       {pending && (
         <ConfirmationBanner
@@ -63,7 +82,7 @@ export default function ChatWindow({ conversationId }: { conversationId: string 
           onCancel={() => confirm(false)}
         />
       )}
-      <MessageInput onSend={send} />
+      <MessageInput onSend={send} onListeningChange={setIsListening} />
     </div>
   );
 }

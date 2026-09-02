@@ -1,11 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
-export default function MessageInput({ onSend }: { onSend: (text: string) => void }) {
+export default function MessageInput({
+  onSend,
+  onListeningChange
+}: {
+  onSend: (text: string) => void;
+  onListeningChange?: (isListening: boolean) => void;
+}) {
   const [value, setValue] = useState('');
   const { start, isListening } = useSpeechRecognition((transcript) => {
     setValue(transcript);
   });
+
+  useEffect(() => {
+    onListeningChange?.(isListening);
+  }, [isListening, onListeningChange]);
 
   function submit() {
     if (!value.trim()) return;

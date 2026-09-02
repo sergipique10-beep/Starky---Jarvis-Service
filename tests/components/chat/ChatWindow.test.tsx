@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ChatWindow from '@/components/chat/ChatWindow';
 
+vi.mock('@/components/orb/Orb', () => ({
+  default: ({ state }: { state: string }) => <div data-testid="orb">{state}</div>,
+}));
+
 beforeEach(() => {
   global.fetch = vi.fn().mockResolvedValue({
     json: async () => ({ type: 'message', text: 'Hola, soy Jarvis.' }),
