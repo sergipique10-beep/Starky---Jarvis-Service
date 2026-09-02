@@ -1,6 +1,27 @@
 import { getSupabaseClient } from '@/lib/supabase/client';
 import type { ConversationMessage } from './types';
 
+export async function getOrCreateDefaultConversation(): Promise<string> {
+  const client = getSupabaseClient();
+
+  const { data: existing, error: selectError } = await client
+    .from('conversations')
+    .select('id')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (selectError) throw new Error(`Failed to fetch conversations: ${selectError.message}`);
+  if (existing) return existing.id;
+
+  const { data: created, error: insertError } = await client
+    .from('conversations')
+    .insert({})
+    .select('id')
+    .single();
+  if (insertError) throw new Error(`Failed to create conversation: ${insertError.message}`);
+  return created.id;
+}
+
 export async function appendMessage(
   conversationId: string,
   role: 'user' | 'assistant' | 'summary',
