@@ -12,8 +12,7 @@ export type OrchestratorResponse =
 export async function handleUserMessage(conversationId: string, text: string): Promise<OrchestratorResponse> {
   await appendMessage(conversationId, 'user', text);
 
-  const context = await buildContext(conversationId);
-  const messages: ClaudeMessage[] = [...context, { role: 'user', content: text }];
+  const messages: ClaudeMessage[] = await buildContext(conversationId);
 
   const response = await sendToClaude(messages, TOOLS);
 
