@@ -42,3 +42,10 @@ create table if not exists pending_actions (
   summary text not null,
   created_at timestamptz not null default now()
 );
+
+create table if not exists reminders (
+  id uuid primary key default gen_random_uuid(),
+  text text not null,
+  due_at timestamptz,
+  created_at timestamptz not null default now()
+);

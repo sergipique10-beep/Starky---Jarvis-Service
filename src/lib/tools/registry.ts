@@ -1,7 +1,8 @@
 import type { ToolDefinition, RiskLevel } from './types';
 import { consultarEstadoProyecto } from './catalog/consultarEstadoProyecto';
+import { crearRecordatorio } from './catalog/crearRecordatorio';
 
-export const TOOLS: ToolDefinition[] = [consultarEstadoProyecto];
+export const TOOLS: ToolDefinition[] = [consultarEstadoProyecto, crearRecordatorio];
 
 export function getTool(name: string): ToolDefinition | undefined {
   return TOOLS.find((t) => t.name === name);
