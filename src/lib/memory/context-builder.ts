@@ -19,15 +19,17 @@ export async function buildContext(conversationId: string): Promise<ClaudeMessag
   const projectsLine = projects.map((p) => `${p.name} (${p.status}): ${p.description ?? 'sin descripción'}`).join('; ');
   const summaryLine = summaryMessages.map((m) => m.content).join(' ');
 
+  const leadingContent = [
+    preferencesLine ? `Preferencias del usuario: ${preferencesLine}.` : '',
+    projectsLine ? `Proyectos recientes: ${projectsLine}.` : '',
+    summaryLine ? `Resumen de la conversación previa: ${summaryLine}` : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   const leadingContext: ClaudeMessage = {
     role: 'user',
-    content: [
-      preferencesLine ? `Preferencias del usuario: ${preferencesLine}.` : '',
-      projectsLine ? `Proyectos recientes: ${projectsLine}.` : '',
-      summaryLine ? `Resumen de la conversación previa: ${summaryLine}` : '',
-    ]
-      .filter(Boolean)
-      .join(' '),
+    content: leadingContent || 'Sin contexto previo todavía.',
   };
 
   const mappedHistory: ClaudeMessage[] = turnMessages.map((m) => ({
