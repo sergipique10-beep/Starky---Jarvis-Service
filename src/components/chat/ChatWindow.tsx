@@ -43,8 +43,10 @@ export default function ChatWindow({ conversationId }: { conversationId: string 
       applyResponse(data);
     } catch (error) {
       console.error('Error sending message:', error);
-      // Ensure orbState is reset even if fetch fails
-      setOrbState('idle');
+      // Only reset orbState if this is still the latest request (not superseded by a newer one)
+      if (myRequestId === requestIdRef.current) {
+        setOrbState('idle');
+      }
     }
   }
 
@@ -63,8 +65,10 @@ export default function ChatWindow({ conversationId }: { conversationId: string 
       applyResponse(data);
     } catch (error) {
       console.error('Error confirming:', error);
-      // Ensure orbState is reset even if fetch fails
-      setOrbState('idle');
+      // Only reset orbState if this is still the latest request (not superseded by a newer one)
+      if (myRequestId === requestIdRef.current) {
+        setOrbState('idle');
+      }
     }
   }
 
