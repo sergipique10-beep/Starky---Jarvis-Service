@@ -4,6 +4,8 @@ export function useSpeechSynthesis() {
   const speak = useCallback((text: string, onStart?: () => void, onEnd?: () => void) => {
     if (!('speechSynthesis' in window)) {
       console.warn('Web Speech API (TTS) no soportada en este navegador.');
+      // Guarantee onEnd is called even if TTS isn't available
+      if (onEnd) onEnd();
       return;
     }
     const utterance = new SpeechSynthesisUtterance(text);

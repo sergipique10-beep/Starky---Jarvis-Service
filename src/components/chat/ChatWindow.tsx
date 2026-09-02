@@ -33,26 +33,39 @@ export default function ChatWindow({ conversationId }: { conversationId: string 
     setMessages((prev) => [...prev, { role: 'user', text }]);
     const myRequestId = ++requestIdRef.current;
     setOrbState('thinking');
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      body: JSON.stringify({ conversationId, text }),
-    });
-    const data = await res.json();
-    if (myRequestId !== requestIdRef.current) return; // stale response, a newer request superseded this one
-    applyResponse(data);
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        body: JSON.stringify({ conversationId, text }),
+      });
+      const data = await res.json();
+      if (myRequestId !== requestIdRef.current) return; // stale response, a newer request superseded this one
+      applyResponse(data);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Ensure orbState is reset even if fetch fails
+      setOrbState('idle');
+    }
   }
 
   async function confirm(confirmed: boolean) {
     if (!pending) return;
     const myRequestId = ++requestIdRef.current;
-    const res = await fetch('/api/confirm', {
-      method: 'POST',
-      body: JSON.stringify({ pendingId: pending.pendingId, confirmed }),
-    });
-    const data = await res.json();
-    if (myRequestId !== requestIdRef.current) return; // stale response, a newer request superseded this one
-    setPending(null);
-    applyResponse(data);
+    setOrbState('thinking');
+    try {
+      const res = await fetch('/api/confirm', {
+        method: 'POST',
+        body: JSON.stringify({ pendingId: pending.pendingId, confirmed }),
+      });
+      const data = await res.json();
+      if (myRequestId !== requestIdRef.current) return; // stale response, a newer request superseded this one
+      setPending(null);
+      applyResponse(data);
+    } catch (error) {
+      console.error('Error confirming:', error);
+      // Ensure orbState is reset even if fetch fails
+      setOrbState('idle');
+    }
   }
 
   function applyResponse(data: any) {
