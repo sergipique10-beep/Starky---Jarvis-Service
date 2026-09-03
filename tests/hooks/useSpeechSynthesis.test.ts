@@ -5,7 +5,12 @@ import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 describe('useSpeechSynthesis', () => {
   it('calls window.speechSynthesis.speak with an utterance built from the text', () => {
     const speak = vi.fn();
-    (global as any).speechSynthesis = { speak };
+    (global as any).speechSynthesis = {
+      speak,
+      getVoices: () => [],
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
     (global as any).SpeechSynthesisUtterance = function (text: string) {
       return { text };
     };
