@@ -37,6 +37,7 @@ beforeEach(() => {
   fakeExecute.mockClear();
   fakeSendMailExecute.mockClear();
   logToolExecution.mockClear();
+  sendToClaude.mockClear();
 });
 
 describe('orchestrator risk gating', () => {
@@ -87,6 +88,41 @@ describe('orchestrator risk gating', () => {
     expect(fakeSendMailExecute).toHaveBeenCalledTimes(1);
     expect(logToolExecution).toHaveBeenCalledWith('enviar_mail', 3, expect.anything(), expect.anything());
     expect(result).toEqual({ type: 'message', text: 'Listo, mail enviado.' });
+  });
+
+  it('chains multiple risk-level-2 tool calls in one turn before returning the final text', async () => {
+    sendToClaude
+      .mockResolvedValueOnce({
+        blocks: [{ type: 'tool_use', id: 'tu_5a', name: 'crear_recordatorio', input: { text: 'llamar al contador' } }],
+      })
+      .mockResolvedValueOnce({
+        blocks: [{ type: 'tool_use', id: 'tu_5b', name: 'crear_recordatorio', input: { text: 'regar las plantas' } }],
+      })
+      .mockResolvedValueOnce({ blocks: [{ type: 'text', text: 'Listo, agendé los dos recordatorios.' }] });
+
+    const result = await handleUserMessage('c1', 'creame dos recordatorios');
+
+    expect(fakeExecute).toHaveBeenCalledTimes(2);
+    expect(sendToClaude).toHaveBeenCalledTimes(3);
+    expect(result).toEqual({ type: 'message', text: 'Listo, agendé los dos recordatorios.' });
+  });
+
+  it('never re-executes an identical tool call proposed twice in the same turn', async () => {
+    const sameInput = { text: 'llamar al contador' };
+    sendToClaude
+      .mockResolvedValueOnce({
+        blocks: [{ type: 'tool_use', id: 'tu_6a', name: 'crear_recordatorio', input: sameInput }],
+      })
+      .mockResolvedValueOnce({
+        // A confused model re-proposes the exact same call instead of moving on.
+        blocks: [{ type: 'tool_use', id: 'tu_6b', name: 'crear_recordatorio', input: sameInput }],
+      })
+      .mockResolvedValueOnce({ blocks: [{ type: 'text', text: 'Listo, ya lo agendé.' }] });
+
+    const result = await handleUserMessage('c1', 'recordame llamar al contador');
+
+    expect(fakeExecute).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ type: 'message', text: 'Listo, ya lo agendé.' });
   });
 
   it('does not execute a risk-level-3 tool if the user rejects the confirmation', async () => {
