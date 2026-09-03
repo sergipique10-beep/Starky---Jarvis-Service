@@ -49,3 +49,15 @@ create table if not exists reminders (
   due_at timestamptz,
   created_at timestamptz not null default now()
 );
+
+create table if not exists site_credentials (
+  id uuid primary key default gen_random_uuid(),
+  project_name text not null unique references projects(name),
+  ssh_host text not null,
+  ssh_port int not null default 22,
+  ssh_username text not null,
+  encrypted_private_key text not null,
+  encryption_iv text not null,
+  encryption_auth_tag text not null,
+  created_at timestamptz not null default now()
+);
