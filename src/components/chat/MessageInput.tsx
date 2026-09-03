@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import styles from './MessageInput.module.css';
 
 export default function MessageInput({
   onSend,
@@ -24,15 +25,24 @@ export default function MessageInput({
   }
 
   return (
-    <div>
+    <div className={styles.bar}>
       <input
+        className={styles.input}
         placeholder="Escribile a Jarvis..."
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && submit()}
       />
-      <button onClick={start} aria-label="hablar">{isListening ? '🎙️...' : '🎙️'}</button>
-      <button onClick={submit}>Enviar</button>
+      <button
+        className={`${styles.iconButton} ${isListening ? styles.iconButtonActive : ''}`}
+        onClick={start}
+        aria-label="hablar"
+      >
+        🎙️
+      </button>
+      <button className={styles.sendButton} onClick={submit}>
+        Enviar
+      </button>
     </div>
   );
 }

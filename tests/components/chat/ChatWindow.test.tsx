@@ -14,7 +14,7 @@ beforeEach(() => {
 
 describe('ChatWindow', () => {
   it('sends the typed message and renders the assistant reply', async () => {
-    render(<ChatWindow conversationId="c1" />);
+    render(<ChatWindow conversationId="c1" userName="Sergi" />);
 
     fireEvent.change(screen.getByPlaceholderText('Escribile a Jarvis...'), {
       target: { value: 'hola' },
@@ -38,7 +38,7 @@ describe('ChatWindow', () => {
       }),
     });
 
-    render(<ChatWindow conversationId="c1" />);
+    render(<ChatWindow conversationId="c1" userName="Sergi" />);
     fireEvent.change(screen.getByPlaceholderText('Escribile a Jarvis...'), {
       target: { value: 'mandale un mail a juan' },
     });

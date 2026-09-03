@@ -1,5 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { ToolDefinition } from '@/lib/tools/types';
+import { sendToGrok } from './providers/grok';
+import { sendToGroq } from './providers/groq';
 
 export interface ClaudeMessage {
   role: 'user' | 'assistant';
@@ -30,6 +32,16 @@ export async function sendToClaude(
   messages: ClaudeMessage[],
   tools: ToolDefinition[]
 ): Promise<ClaudeResponse> {
+  // LLM_PROVIDER lets the orchestrator run against Grok/Groq instead of Claude
+  // (e.g. while testing without Anthropic credit) without any caller caring —
+  // every path returns the same ClaudeResponse shape.
+  if (process.env.LLM_PROVIDER === 'grok') {
+    return sendToGrok(messages, tools);
+  }
+  if (process.env.LLM_PROVIDER === 'groq') {
+    return sendToGroq(messages, tools);
+  }
+
   const client = getClient();
   const response = await client.messages.create({
     model: 'claude-sonnet-5',

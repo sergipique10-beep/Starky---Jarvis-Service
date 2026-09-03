@@ -1,0 +1,17 @@
+.button {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.button:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
