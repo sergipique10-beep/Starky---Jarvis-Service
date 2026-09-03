@@ -7,6 +7,8 @@
   --accent-dim: #1c8fb0;
   --text-dim: #7c93a0;
   --danger: #ffb547;
+  --risk-low: #3ddc84;
+  --risk-critical: #ff5c5c;
 }
 
 html {
