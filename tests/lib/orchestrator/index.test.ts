@@ -31,7 +31,7 @@ vi.mock('@/lib/tools/registry', () => ({
   getRiskLevel: (name: string) => (name === 'crear_recordatorio' ? 2 : 3),
 }));
 
-import { handleUserMessage, handleConfirmation } from '@/lib/orchestrator/index';
+import { handleUserMessage, handleConfirmation, proposeManualAction } from '@/lib/orchestrator/index';
 
 beforeEach(() => {
   fakeExecute.mockClear();
@@ -138,5 +138,39 @@ describe('orchestrator risk gating', () => {
 
     expect(fakeSendMailExecute).not.toHaveBeenCalled();
     expect(result).toEqual({ type: 'message', text: 'Ok, no lo hago.' });
+  });
+
+  it('proposeManualAction executes a risk-level-2 tool immediately, with no LLM call', async () => {
+    const result = await proposeManualAction('crear_recordatorio', { text: 'regar las plantas' });
+
+    expect(fakeExecute).toHaveBeenCalledTimes(1);
+    expect(fakeExecute).toHaveBeenCalledWith({ text: 'regar las plantas' }, { conversationId: undefined });
+    expect(logToolExecution).toHaveBeenCalledWith('crear_recordatorio', 2, expect.anything(), expect.anything());
+    expect(sendToClaude).not.toHaveBeenCalled();
+    expect(result).toEqual({ type: 'message', text: 'Recordatorio creado.' });
+  });
+
+  it('proposeManualAction NEVER executes a risk-level-3 tool before confirmation', async () => {
+    const result = await proposeManualAction('enviar_mail', { to: 'juan@mail.com', subject: 'Hola', body: 'Test' });
+
+    expect(fakeSendMailExecute).not.toHaveBeenCalled();
+    expect(sendToClaude).not.toHaveBeenCalled();
+    expect(result.type).toBe('confirmation_required');
+    if (result.type === 'confirmation_required') {
+      expect(result.toolName).toBe('enviar_mail');
+      expect(result.pendingId).toBeTruthy();
+    }
+  });
+
+  it('confirming a panel-originated (conversation-less) risk-3 action executes it without calling the LLM', async () => {
+    const pending = await proposeManualAction('enviar_mail', { to: 'juan@mail.com', subject: 'Hola', body: 'Test' });
+    if (pending.type !== 'confirmation_required') throw new Error('expected confirmation_required');
+
+    const result = await handleConfirmation(pending.pendingId, true);
+
+    expect(fakeSendMailExecute).toHaveBeenCalledTimes(1);
+    expect(logToolExecution).toHaveBeenCalledWith('enviar_mail', 3, expect.anything(), expect.anything());
+    expect(sendToClaude).not.toHaveBeenCalled();
+    expect(result).toEqual({ type: 'message', text: 'Mail enviado.' });
   });
 });

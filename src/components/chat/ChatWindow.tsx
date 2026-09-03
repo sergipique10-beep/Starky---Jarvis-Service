@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
+import Link from 'next/link';
 import MessageList, { type DisplayMessage } from './MessageList';
 import MessageInput from './MessageInput';
 import ConfirmationBanner from './ConfirmationBanner';
@@ -107,6 +108,9 @@ export default function ChatWindow({
       <ElectricBackground />
       <SplashLoader />
       <div className={styles.controls}>
+        <Link href="/panel" className={styles.panelLink} aria-label="Panel">
+          ⚙
+        </Link>
         <MuteButton muted={muted} onToggle={toggleMuted} />
         <VoiceSelector voices={voices} voiceURI={voiceURI} onChange={setVoiceURI} />
         <LogoutButton />

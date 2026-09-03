@@ -2,15 +2,20 @@ import { randomUUID } from 'node:crypto';
 
 export interface PendingAction {
   id: string;
-  conversationId: string;
+  conversationId?: string;
   toolName: string;
   input: unknown;
-  toolUseId: string;
+  toolUseId?: string;
 }
 
 const store = new Map<string, PendingAction>();
 
-export function createPendingAction(conversationId: string, toolName: string, input: unknown, toolUseId: string): PendingAction {
+export function createPendingAction(
+  toolName: string,
+  input: unknown,
+  conversationId?: string,
+  toolUseId?: string
+): PendingAction {
   const action: PendingAction = { id: randomUUID(), conversationId, toolName, input, toolUseId };
   store.set(action.id, action);
   return action;
