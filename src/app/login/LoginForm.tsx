@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './LoginForm.module.css';
 
@@ -27,6 +27,12 @@ export default function LoginForm() {
       audioRef.current = null;
     });
   }
+
+  // Try immediately on mount too — some browsers allow it (site's media
+  // engagement history); if blocked, the click/focus handlers below retry.
+  useEffect(() => {
+    startMusic();
+  }, []);
 
   function fadeOutMusic(durationMs: number): Promise<void> {
     return new Promise((resolve) => {
