@@ -20,7 +20,7 @@ async function toSectionResult<T>(promise: Promise<T>): Promise<SectionResult<T>
     const data = await promise;
     return { available: true, data };
   } catch (err) {
-    return { available: false, reason: (err as Error).message };
+    return { available: false, reason: err instanceof Error ? err.message : String(err) };
   }
 }
 
