@@ -21,6 +21,24 @@ export async function handleUserMessage(conversationId: string, text: string): P
   return runConversationLoop(conversationId, messages);
 }
 
+// Triggered from the tools control panel — no conversation, no LLM turn.
+// Risk 1/2 tools run immediately; risk 3 tools go through the exact same
+// pending-action gate the chat uses, just without a conversationId.
+export async function proposeManualAction(toolName: string, input: unknown): Promise<OrchestratorResponse> {
+  const riskLevel = getRiskLevel(toolName);
+
+  if (riskLevel === 3) {
+    const pending = createPendingAction(toolName, input);
+    const summary = `¿Confirmás ejecutar "${toolName}" con estos datos? ${JSON.stringify(input)}`;
+    return { type: 'confirmation_required', pendingId: pending.id, toolName, summary };
+  }
+
+  const tool = getTool(toolName)!;
+  const result = await tool.execute(input, { conversationId: undefined });
+  await logToolExecution(toolName, riskLevel, input, result);
+  return { type: 'message', text: result.message };
+}
+
 export async function handleConfirmation(pendingId: string, confirmed: boolean): Promise<OrchestratorResponse> {
   const pending = getPendingAction(pendingId);
   if (!pending) {
@@ -38,6 +56,12 @@ export async function handleConfirmation(pendingId: string, confirmed: boolean):
   const riskLevel = getRiskLevel(pending.toolName);
   const result = await tool.execute(pending.input, { conversationId: pending.conversationId });
   await logToolExecution(pending.toolName, riskLevel, pending.input, result);
+
+  // Panel-originated action: no conversation to reply into, and no point
+  // asking the model to narrate a result nobody in a chat will read.
+  if (!pending.conversationId) {
+    return { type: 'message', text: result.message };
+  }
 
   const context = await buildContext(pending.conversationId);
   const messages: ClaudeMessage[] = [...context, toolResultMessage(pending.toolName, result.message)];
