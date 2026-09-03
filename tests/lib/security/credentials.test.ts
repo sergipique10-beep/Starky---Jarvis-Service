@@ -24,4 +24,13 @@ describe('credentials encryption', () => {
     delete process.env.CREDENTIALS_MASTER_KEY;
     expect(() => encryptSecret('x')).toThrow();
   });
+
+  it('throws when the auth tag has been tampered with', () => {
+    const payload = encryptSecret('some-secret');
+    const tamperedTagBytes = Buffer.from(payload.authTag, 'base64');
+    tamperedTagBytes[0] ^= 0xff; // flip bits in the first byte
+    const tampered = { ...payload, authTag: tamperedTagBytes.toString('base64') };
+
+    expect(() => decryptSecret(tampered)).toThrow();
+  });
 });
