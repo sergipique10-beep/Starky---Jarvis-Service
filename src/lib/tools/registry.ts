@@ -4,8 +4,9 @@ import { crearRecordatorio } from './catalog/crearRecordatorio';
 import { enviarMail } from './catalog/enviarMail';
 import { ejecutarComando } from './catalog/ejecutarComando';
 import { auditarSitioWordpress } from './catalog/auditarSitioWordpress';
+import { auditarTodosLosSitios } from './catalog/auditarTodosLosSitios';
 
-export const TOOLS: ToolDefinition[] = [consultarEstadoProyecto, crearRecordatorio, enviarMail, ejecutarComando, auditarSitioWordpress];
+export const TOOLS: ToolDefinition[] = [consultarEstadoProyecto, crearRecordatorio, enviarMail, ejecutarComando, auditarSitioWordpress, auditarTodosLosSitios];
 
 export function getTool(name: string): ToolDefinition | undefined {
   return TOOLS.find((t) => t.name === name);
