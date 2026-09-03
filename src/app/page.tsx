@@ -1,5 +1,6 @@
 import ChatWindow from '@/components/chat/ChatWindow';
 import { getOrCreateDefaultConversation } from '@/lib/memory/conversations';
+import { getPreferences } from '@/lib/memory/preferences';
 
 // This page talks to Supabase on every load (it ensures a conversation row
 // exists and reads its id), so it must never be statically prerendered —
@@ -8,6 +9,10 @@ import { getOrCreateDefaultConversation } from '@/lib/memory/conversations';
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const conversationId = await getOrCreateDefaultConversation();
-  return <ChatWindow conversationId={conversationId} />;
+  const [conversationId, preferences] = await Promise.all([
+    getOrCreateDefaultConversation(),
+    getPreferences(),
+  ]);
+  const userName = preferences.nombre_usuario ?? 'Vos';
+  return <ChatWindow conversationId={conversationId} userName={userName} />;
 }
