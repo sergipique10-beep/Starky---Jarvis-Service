@@ -8,6 +8,10 @@ export interface SiteCredentials {
   privateKey: string;
 }
 
+// NOTE: This function currently has no production caller. The SSH/database-audit feature
+// (gatherWpCliInventory via getSiteCredentials) is inert in practice until a credential-
+// registration entry point exists — a future risk-level-3 tool, intentionally not built as
+// part of this dispatch.
 export async function saveSiteCredentials(projectName: string, creds: SiteCredentials): Promise<void> {
   const payload = encryptSecret(creds.privateKey);
   const client = getSupabaseClient();
