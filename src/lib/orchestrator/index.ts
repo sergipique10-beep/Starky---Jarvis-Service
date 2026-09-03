@@ -28,7 +28,7 @@ export async function handleUserMessage(conversationId: string, text: string): P
       // We only record it as pending and return a confirmation request. The
       // actual execute() call for this tool can only happen inside
       // handleConfirmation, and only when confirmed === true.
-      const pending = createPendingAction(conversationId, toolUse.name, toolUse.input, toolUse.id);
+      const pending = createPendingAction(toolUse.name, toolUse.input, conversationId, toolUse.id);
       const summary = `¿Confirmás ejecutar "${toolUse.name}" con estos datos? ${JSON.stringify(toolUse.input)}`;
       return { type: 'confirmation_required', pendingId: pending.id, toolName: toolUse.name, summary };
     }

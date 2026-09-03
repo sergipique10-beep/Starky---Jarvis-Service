@@ -7,7 +7,7 @@ export interface ToolResult {
 }
 
 export interface ToolContext {
-  conversationId: string;
+  conversationId?: string;
 }
 
 export interface ToolDefinition {
