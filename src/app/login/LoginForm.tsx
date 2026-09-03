@@ -18,10 +18,14 @@ export default function LoginForm() {
     if (audioRef.current) return;
     const audio = new Audio('/audio/opening.mp3');
     audio.volume = 0.3; // background ambience, not the main event
-    audio.play().catch(() => {
-      // Gesture didn't satisfy the browser's autoplay policy — fail silently.
-    });
     audioRef.current = audio;
+    audio.play().catch(() => {
+      // autoFocus fires this on mount without a real user gesture, so the
+      // browser often rejects it — clear the ref so the next genuine
+      // gesture (click, real focus, keypress) can retry instead of being
+      // silently blocked forever.
+      audioRef.current = null;
+    });
   }
 
   function fadeOutMusic(durationMs: number): Promise<void> {
