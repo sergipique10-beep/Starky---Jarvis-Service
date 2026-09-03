@@ -1,10 +1,24 @@
 import type { WordpressAuditReport } from './wordpressAuditAggregator';
 
+// Several values interpolated below (plugin names/versions, vulnerability titles, WP version,
+// and section `reason` strings) can originate from the audited third-party WordPress site via
+// WPScan/WP-CLI, not from a trusted operator. Since this HTML is fed into a real headless
+// Chromium via page.setContent(), an adversarial site could otherwise inject <script> or other
+// markup that executes during PDF generation. Escape every dynamic value before interpolation.
+function escapeHtml(value: string): string {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
 function renderSection(title: string, bodyHtml: string, unavailableReason?: string): string {
   if (unavailableReason) {
-    return `<section><h2>${title}</h2><p class="unavailable">Sección no disponible: ${unavailableReason}</p></section>`;
+    return `<section><h2>${escapeHtml(title)}</h2><p class="unavailable">Sección no disponible: ${escapeHtml(unavailableReason)}</p></section>`;
   }
-  return `<section><h2>${title}</h2>${bodyHtml}</section>`;
+  return `<section><h2>${escapeHtml(title)}</h2>${bodyHtml}</section>`;
 }
 
 export function renderAuditReportHtml(report: WordpressAuditReport): string {
@@ -14,22 +28,22 @@ export function renderAuditReportHtml(report: WordpressAuditReport): string {
     : '';
 
   const securityHtml = report.security.available
-    ? `<p>Versión de WordPress: ${report.security.data.wpVersion ?? 'desconocida'}</p>
+    ? `<p>Versión de WordPress: ${escapeHtml(report.security.data.wpVersion ?? 'desconocida')}</p>
        <ul>${report.security.data.vulnerabilities
-         .map((v) => `<li>[${v.severity.toUpperCase()}] ${v.title} (${v.component})</li>`)
+         .map((v) => `<li>[${escapeHtml(v.severity.toUpperCase())}] ${escapeHtml(v.title)} (${escapeHtml(v.component)})</li>`)
          .join('')}</ul>`
     : '';
 
   const pluginsHtml = report.plugins.available
     ? `<ul>${report.plugins.data.external
-        .map((p) => `<li>${p.name} — v${p.version ?? '?'}</li>`)
+        .map((p) => `<li>${escapeHtml(p.name)} — v${escapeHtml(p.version ?? '?')}</li>`)
         .join('')}</ul>`
     : '';
 
   const databaseHtml = report.database.available
     ? `<p>Tamaño de la base de datos: ${report.database.data.sizeMb} MB</p>
        <ul>${report.database.data.largestTables
-         .map((t) => `<li>${t.name}: ${t.sizeMb} MB</li>`)
+         .map((t) => `<li>${escapeHtml(t.name)}: ${t.sizeMb} MB</li>`)
          .join('')}</ul>`
     : '';
 
@@ -37,8 +51,8 @@ export function renderAuditReportHtml(report: WordpressAuditReport): string {
     <html>
       <head><meta charset="utf-8" /></head>
       <body>
-        <h1>Auditoría de ${report.siteName}</h1>
-        <p>${report.url} — generado el ${report.generatedAt}</p>
+        <h1>Auditoría de ${escapeHtml(report.siteName)}</h1>
+        <p>${escapeHtml(report.url)} — generado el ${report.generatedAt}</p>
         ${renderSection('Rendimiento', performanceHtml, report.performance.available ? undefined : report.performance.reason)}
         ${renderSection('Seguridad', securityHtml, report.security.available ? undefined : report.security.reason)}
         ${renderSection('Plugins', pluginsHtml, report.plugins.available ? undefined : report.plugins.reason)}
