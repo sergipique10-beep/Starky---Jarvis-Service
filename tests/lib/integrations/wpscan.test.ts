@@ -52,12 +52,15 @@ describe('scanSecurity', () => {
     ]);
   });
 
-  it('passes the URL and API token as separate execFile arguments, never interpolated into a string', async () => {
+  it('passes the URL as a separate execFile argument and the API token via the child process env, never as an argv element', async () => {
     mockWpscanOutput({ version: null, vulnerabilities: [], plugins: {} });
     await scanSecurity('https://example.com');
 
     const args = mockExecFile.mock.calls[0][1] as string[];
+    const opts = mockExecFile.mock.calls[0][2] as any;
     expect(args).toContain('https://example.com');
-    expect(args).toContain('test-token');
+    expect(args).not.toContain('test-token');
+    expect(args).not.toContain('--api-token');
+    expect(opts.env.WPSCAN_API_TOKEN).toBe('test-token');
   });
 });

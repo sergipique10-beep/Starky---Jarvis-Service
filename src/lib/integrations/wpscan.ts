@@ -24,7 +24,7 @@ async function execFileAsync(
   return new Promise((resolve, reject) => {
     execFile(command, args, options, (error, stdout, stderr) => {
       if (error) reject(error);
-      else resolve({ stdout: stdout as string, stderr: stderr as string });
+      else resolve({ stdout: stdout.toString(), stderr: stderr.toString() });
     });
   });
 }
@@ -33,10 +33,18 @@ export async function scanSecurity(url: string): Promise<WpScanResult> {
   const apiToken = process.env.WPSCAN_API_TOKEN;
   if (!apiToken) throw new Error('Missing WPSCAN_API_TOKEN');
 
+  // The API token is passed via the child process environment (wpscan reads WPSCAN_API_TOKEN
+  // natively) rather than as a --api-token argv element, so it never appears in the command
+  // line — and therefore never leaks into an execFile error's `Command failed: ...` message,
+  // which would otherwise propagate into the aggregator's `reason` field, the rendered PDF,
+  // and the audit_log table.
   const { stdout } = await execFileAsync(
     'wpscan',
-    ['--url', url, '--api-token', apiToken, '--format', 'json', '--random-user-agent', '--no-banner'],
-    { maxBuffer: 20 * 1024 * 1024 }
+    ['--url', url, '--format', 'json', '--random-user-agent', '--no-banner'],
+    {
+      maxBuffer: 20 * 1024 * 1024,
+      env: { ...process.env, WPSCAN_API_TOKEN: apiToken },
+    }
   );
 
   const raw = JSON.parse(stdout);
