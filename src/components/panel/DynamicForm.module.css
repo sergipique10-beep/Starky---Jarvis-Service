@@ -34,6 +34,11 @@
   border-color: var(--accent);
 }
 
+.fieldError {
+  font-size: 11px;
+  color: var(--error, #e5484d);
+}
+
 .submit {
   align-self: flex-start;
   background: var(--accent-dim);

@@ -32,7 +32,7 @@ describe('DynamicForm', () => {
 
     const select = screen.getByLabelText('command') as HTMLSelectElement;
     expect(select.tagName).toBe('SELECT');
-    expect(Array.from(select.options).map((o) => o.value)).toEqual(['git_status']);
+    expect(Array.from(select.options).map((o) => o.value)).toEqual(['', 'git_status']);
   });
 
   it('calls onSubmit with the filled values, omitting empty optional fields', () => {
@@ -43,5 +43,15 @@ describe('DynamicForm', () => {
     fireEvent.click(screen.getByText('Ejecutar'));
 
     expect(onSubmit).toHaveBeenCalledWith({ text: 'llamar al contador' });
+  });
+
+  it('does not call onSubmit and shows a validation message when a required field is empty', () => {
+    const onSubmit = vi.fn();
+    render(<DynamicForm schema={reminderSchema} onSubmit={onSubmit} submitLabel="Ejecutar" />);
+
+    fireEvent.click(screen.getByText('Ejecutar'));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText('Este campo es obligatorio')).toBeTruthy();
   });
 });

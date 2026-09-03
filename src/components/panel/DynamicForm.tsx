@@ -21,6 +21,7 @@ export default function DynamicForm({
   disabled?: boolean;
 }) {
   const [values, setValues] = useState<Record<string, string>>({});
+  const [missingFields, setMissingFields] = useState<Set<string>>(new Set());
   const fields = Object.entries(schema.properties);
   const required = new Set(schema.required ?? []);
 
@@ -29,6 +30,17 @@ export default function DynamicForm({
   }
 
   function submit() {
+    const missing = new Set<string>();
+    for (const key of required) {
+      const raw = values[key];
+      if (!raw) missing.add(key);
+    }
+    if (missing.size > 0) {
+      setMissingFields(missing);
+      return;
+    }
+    setMissingFields(new Set());
+
     const result: Record<string, unknown> = {};
     for (const [key, field] of fields) {
       const raw = values[key];
@@ -53,11 +65,9 @@ export default function DynamicForm({
               value={values[key] ?? ''}
               onChange={(e) => setField(key, e.target.value)}
             >
-              {!required.has(key) && (
-                <option value="" disabled>
-                  Elegir…
-                </option>
-              )}
+              <option value="" disabled>
+                Elegir…
+              </option>
               {field.enum.map((option) => (
                 <option key={option} value={option}>
                   {option}
@@ -73,6 +83,7 @@ export default function DynamicForm({
               onChange={(e) => setField(key, e.target.value)}
             />
           )}
+          {missingFields.has(key) && <span className={styles.fieldError}>Este campo es obligatorio</span>}
         </div>
       ))}
       <button className={styles.submit} onClick={submit} disabled={disabled}>

@@ -90,4 +90,21 @@ describe('POST /api/tools/execute', () => {
     expect(sendToClaude).not.toHaveBeenCalled();
     expect(confirmBody).toEqual({ type: 'message', text: 'Mail enviado a juan@mail.com.' });
   });
+
+  it('returns a 404 for an unknown toolName and never proposes/executes anything', async () => {
+    const executeSpy = vi.spyOn(enviarMailTool, 'execute');
+
+    const request = new Request('http://localhost/api/tools/execute', {
+      method: 'POST',
+      body: JSON.stringify({ toolName: 'not_a_real_tool', input: {} }),
+    });
+
+    const response = await executePOST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(body).toEqual({ error: 'Unknown tool: not_a_real_tool' });
+    expect(executeSpy).not.toHaveBeenCalled();
+    expect(sendToClaude).not.toHaveBeenCalled();
+  });
 });

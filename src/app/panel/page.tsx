@@ -7,7 +7,7 @@ import { getRecentAuditLog } from '@/lib/tools/audit';
 export const dynamic = 'force-dynamic';
 
 export default async function PanelPage() {
-  const auditLog = await getRecentAuditLog(20);
+  const auditLog = await getRecentAuditLog(20).catch(() => []);
   const tools = TOOLS.map((t) => ({
     name: t.name,
     description: t.description,

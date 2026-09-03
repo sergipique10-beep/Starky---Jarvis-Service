@@ -42,6 +42,11 @@ export default function PanelClient({
         method: 'POST',
         body: JSON.stringify({ toolName, input }),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setErrors((prev) => ({ ...prev, [toolName]: data?.error || 'No se pudo ejecutar la herramienta.' }));
+        return;
+      }
       const data = await res.json();
       applyResult(toolName, data);
     } catch {
@@ -60,6 +65,12 @@ export default function PanelClient({
         method: 'POST',
         body: JSON.stringify({ pendingId, confirmed }),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setPending(null);
+        setErrors((prev) => ({ ...prev, [toolName]: data?.error || 'No se pudo confirmar la acción.' }));
+        return;
+      }
       const data = await res.json();
       setPending(null);
       applyResult(toolName, data);

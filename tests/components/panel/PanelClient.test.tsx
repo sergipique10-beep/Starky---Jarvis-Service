@@ -27,6 +27,7 @@ beforeEach(() => {
 describe('PanelClient', () => {
   it('executes a risk-level-2 macro directly and shows the result', async () => {
     (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
       json: async () => ({ type: 'message', text: 'Listo, agendé el recordatorio.' }),
     });
 
@@ -47,6 +48,7 @@ describe('PanelClient', () => {
 
   it('shows a confirmation review for a risk-level-3 macro and only executes it after confirming', async () => {
     (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
       json: async () => ({
         type: 'confirmation_required',
         pendingId: 'p1',
@@ -65,6 +67,7 @@ describe('PanelClient', () => {
     await waitFor(() => expect(screen.getByText('¿Confirmás enviar el mail?')).toBeTruthy());
 
     (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
       json: async () => ({ type: 'message', text: 'Mail enviado a juan@mail.com.' }),
     });
 
@@ -75,5 +78,19 @@ describe('PanelClient', () => {
       '/api/confirm',
       expect.objectContaining({ method: 'POST', body: JSON.stringify({ pendingId: 'p1', confirmed: true }) })
     );
+  });
+
+  it('shows an error message instead of silently doing nothing when the execute request is not ok', async () => {
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: 'No autorizado.' }),
+    });
+
+    render(<PanelClient tools={[crearRecordatorioTool]} initialAuditLog={[]} />);
+
+    fireEvent.change(screen.getByLabelText('text'), { target: { value: 'regar las plantas' } });
+    fireEvent.click(screen.getByText('Ejecutar'));
+
+    await waitFor(() => expect(screen.getByText('No autorizado.')).toBeTruthy());
   });
 });
