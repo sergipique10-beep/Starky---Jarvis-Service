@@ -34,11 +34,13 @@ export const auditarSitioWordpress: ToolDefinition = {
     const perfSummary = report.performance.available
       ? `score de performance ${report.performance.data.performanceScore}/100`
       : 'performance no disponible';
-    const vulnCount = report.security.available ? report.security.data.vulnerabilities.length : 0;
+    const securitySummary = report.security.available
+      ? `${report.security.data.vulnerabilities.length} vulnerabilidad(es) encontrada(s)`
+      : 'seguridad no disponible';
 
     return {
       success: true,
-      message: `Auditoría de ${sitio} completa: ${perfSummary}, ${vulnCount} vulnerabilidad(es) encontrada(s).`,
+      message: `Auditoría de ${sitio} completa: ${perfSummary}, ${securitySummary}.`,
       data: { pdfPath: outputPath, report },
     };
   },
