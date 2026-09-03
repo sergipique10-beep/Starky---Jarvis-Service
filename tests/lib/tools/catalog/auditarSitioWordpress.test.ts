@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('@/lib/memory/projects', () => ({
   getProject: vi.fn().mockResolvedValue({ name: 'W1', status: 'active', description: 'https://example.com' }),

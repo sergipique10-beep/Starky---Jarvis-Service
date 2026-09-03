@@ -4,7 +4,7 @@ export async function generatePdf(html: string, outputPath: string): Promise<voi
   const browser = await puppeteer.launch({ headless: true });
   try {
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    await page.setContent(html, { waitUntil: 'load' });
     await page.pdf({ path: outputPath, format: 'A4', printBackground: true });
   } finally {
     await browser.close();
