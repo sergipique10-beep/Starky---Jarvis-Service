@@ -48,4 +48,11 @@ describe('ChatWindow', () => {
     expect(screen.getByText('Confirmar')).toBeTruthy();
     expect(screen.getByText('Cancelar')).toBeTruthy();
   });
+
+  it('links to the tools control panel', () => {
+    render(<ChatWindow conversationId="c1" userName="Sergi" />);
+
+    const link = screen.getByRole('link', { name: 'Panel' });
+    expect(link).toHaveAttribute('href', '/panel');
+  });
 });
