@@ -5,19 +5,31 @@ import MessageList, { type DisplayMessage } from './MessageList';
 import MessageInput from './MessageInput';
 import ConfirmationBanner from './ConfirmationBanner';
 import Orb, { type OrbState } from '../orb/Orb';
+import SplashLoader from './SplashLoader';
+import ElectricBackground from './ElectricBackground';
+import VoiceSelector from './VoiceSelector';
+import MuteButton from './MuteButton';
+import LogoutButton from './LogoutButton';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
+import styles from './ChatWindow.module.css';
 
 interface PendingConfirmation {
   pendingId: string;
   summary: string;
 }
 
-export default function ChatWindow({ conversationId }: { conversationId: string }) {
+export default function ChatWindow({
+  conversationId,
+  userName,
+}: {
+  conversationId: string;
+  userName: string;
+}) {
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [pending, setPending] = useState<PendingConfirmation | null>(null);
   const [orbState, setOrbState] = useState<OrbState>('idle');
   const [isListening, setIsListening] = useState(false);
-  const { speak } = useSpeechSynthesis();
+  const { speak, voices, voiceURI, setVoiceURI, muted, toggleMuted } = useSpeechSynthesis();
   const requestIdRef = useRef(0);
 
   // Update orbState based on listening state, unless overridden by thinking/speaking
@@ -88,10 +100,21 @@ export default function ChatWindow({ conversationId }: { conversationId: string 
     }
   }
 
+  const isEmpty = messages.length === 0;
+
   return (
-    <div>
-      <Orb state={orbState} />
-      <MessageList messages={messages} />
+    <div className={styles.window}>
+      <ElectricBackground />
+      <SplashLoader />
+      <div className={styles.controls}>
+        <MuteButton muted={muted} onToggle={toggleMuted} />
+        <VoiceSelector voices={voices} voiceURI={voiceURI} onChange={setVoiceURI} />
+        <LogoutButton />
+      </div>
+      <div className={`${styles.orbSlot} ${isEmpty ? styles.orbSlotCentered : ''}`}>
+        <Orb state={orbState} />
+      </div>
+      <MessageList messages={messages} userName={userName} />
       {pending && (
         <ConfirmationBanner
           summary={pending.summary}
