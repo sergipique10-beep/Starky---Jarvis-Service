@@ -13,11 +13,19 @@ export const auditarTodosLosSitios: ToolDefinition = {
     const failures: string[] = [];
 
     for (const project of projects) {
-      const result = await auditarSitioWordpress.execute({ sitio: project.name }, ctx);
-      if (result.success) {
-        pdfPaths.push((result.data as { pdfPath: string }).pdfPath);
-      } else {
-        failures.push(`${project.name}: ${result.message}`);
+      try {
+        const result = await auditarSitioWordpress.execute({ sitio: project.name }, ctx);
+        if (result.success) {
+          pdfPaths.push((result.data as { pdfPath: string }).pdfPath);
+        } else {
+          failures.push(`${project.name}: ${result.message}`);
+        }
+      } catch (err) {
+        // A thrown exception (e.g. Puppeteer/PDF generation failure, GCM auth failure while
+        // decrypting credentials, or a Supabase error from getProject) must not abort the
+        // rest of the batch — record it as a failure and keep going.
+        const message = err instanceof Error ? err.message : String(err);
+        failures.push(`${project.name}: ${message}`);
       }
     }
 
