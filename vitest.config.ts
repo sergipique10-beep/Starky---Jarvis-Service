@@ -7,6 +7,9 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    // Exclude nested git worktrees (e.g. .claude/worktrees/*) so running the
+    // suite from the main checkout never picks up another workspace's tests.
+    exclude: ['**/node_modules/**', '**/.claude/worktrees/**', '**/.worktrees/**'],
   },
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
