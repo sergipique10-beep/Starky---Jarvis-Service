@@ -68,4 +68,53 @@ describe('sendToGroq', () => {
       'Missing GROQ_API_KEY'
     );
   });
+
+  it('retries once after the rate-limit window and succeeds', async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        statusText: 'Too Many Requests',
+        json: async () => ({
+          error: { message: 'Rate limit reached ... Please try again in 2.5s.' },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ choices: [{ message: { content: 'hola!' } }] }),
+      });
+    global.fetch = fetchMock as any;
+
+    const promise = sendToGroq([{ role: 'user', content: 'hola' }], []);
+    await vi.advanceTimersByTimeAsync(2500);
+    const response = await promise;
+
+    expect(response.blocks).toEqual([{ type: 'text', text: 'hola!' }]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
+  });
+
+  it('throws the rate-limit error if the retry also fails', async () => {
+    vi.useFakeTimers();
+    const rateLimitResponse = {
+      ok: false,
+      status: 429,
+      statusText: 'Too Many Requests',
+      json: async () => ({
+        error: { message: 'Rate limit reached ... Please try again in 1s.' },
+      }),
+    };
+    const fetchMock = vi.fn().mockResolvedValue(rateLimitResponse);
+    global.fetch = fetchMock as any;
+
+    const promise = sendToGroq([{ role: 'user', content: 'hola' }], []);
+    const expectation = expect(promise).rejects.toThrow('Rate limit reached');
+    await vi.advanceTimersByTimeAsync(1000);
+    await expectation;
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
+  });
 });
